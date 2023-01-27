@@ -4,7 +4,7 @@
 
 use std::i8;
 
-use thirtyfour::prelude::ScriptRet;
+use thirtyfour::prelude::{ScriptRet, WebDriverError};
 use thirtyfour::{WebDriver, DesiredCapabilities, WebElement};
 use tokio;
 struct Square {
@@ -14,17 +14,27 @@ struct Square {
     top: u64,
 }
 
+impl Square {
+    fn width(&self) -> u64 {
+        self.width = self.left - self.right
+    }
+}
+
 async fn click_square(driver: WebDriver, square: Square){
-    let script_return: ScriptRet = driver.execute(
+    let script_return = driver.execute(
             "return document.querySelector(\'body\')", 
             Vec::new()
-        ).await?;
-    let element: WebElement = match script_return.element() {
-        Ok(element) => element,
-        Err(error) => panic!("Problem getting script return results {:?}", error),
+        ).await;
+    let body = match script_return {
+        Ok(body) => body,
+        Err(error) => panic!("Could not get the body from the webpage. {:?}", error),
     };
-    let x_offset = square['left']+(square['width']/2);
-    let y_offset = square['top']+int(square['width']/2);
+    let element: WebElement = match body.element() {
+        Ok(element) => element,
+        Err(error) => panic!("Problem getting element from body {:?}", error),
+    };
+    let x_offset = square.left + (square.width/2);
+    let y_offset = square.top + int(square.width/2);
     let ac = driver
         .action_chain()
         .move_to_element_center(&element)
