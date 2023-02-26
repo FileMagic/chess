@@ -55,7 +55,33 @@ async fn click_square(driver: &WebDriver, square: Square){
     };
     chain_result
 }
+/*
 
+use thirtyfour_sync::http::reqwest_sync::ReqwestDriverSync;
+use thirtyfour_sync::{prelude::*, GenericWebDriver};
+use thirtyfour_sync::common::cookie::SameSite;
+use serde_json::json;
+
+*/
+
+/*
+let caps = DesiredCapabilities::firefox();
+        let driver = WebDriver::new("http://localhost:4444", &caps).expect("Unable to connect to WebDriver");
+
+        // navigate to chess.com and set the session id cookie to use pre-existing authentication
+        driver.get("https://www.chess.com").unwrap();
+        let mut cookie = Cookie::new("PHPSESSID", json!(phpsessid));
+        cookie.set_domain(Some(".chess.com".to_string()));
+        cookie.set_path(Some("/".to_string()));
+        cookie.set_same_site(Some(SameSite::Lax));
+        driver.add_cookie(cookie).unwrap();
+        driver.refresh().unwrap();
+
+        println!("\nNavigate to the chess game, and hit enter when ready to run the bot...\n");
+
+let mut buf = String::new();
+        std::io::stdin().read_line(&mut buf).unwrap();
+*/
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
