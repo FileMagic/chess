@@ -1,3 +1,5 @@
+use super::piece::{PieceType, Move};
+
 // https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html
 // https://locka99.gitbooks.io/a-guide-to-porting-c-to-rust/content/features_of_rust/enums.html
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -35,92 +37,88 @@ pub struct Board {
 // think about writing this: https://www.chessprogramming.org/Bitboard_Board-Definition#Denser_Board
 // Then write this: https://www.chessprogramming.org/Square_Attacked_By#LegalityTest
 impl Board {
+    pub fn create_move(&self, from: Square, to: Square) -> Option<Move> {
+      let mut piece_type = None;
+      let mut capture = false;
+      let mut promotion = None;
+
+      // Determine the piece type of the moving piece
+      if self.light_pieces & (1 << (from as u64)) != 0 {
+        if self.pawns & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Pawn);
+        } else if self.knights & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Knight);
+        } else if self.bishops & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Bishop);
+        } else if self.rooks & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Rook);
+        } else if self.queens & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Queen);
+        } else if self.kings & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::King);
+        }
+      } else if self.dark_pieces & (1 << (from as u64)) != 0 {
+        if self.pawns & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Pawn);
+        } else if self.knights & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Knight);
+        } else if self.bishops & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Bishop);
+        } else if self.rooks & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Rook);
+        } else if self.queens & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::Queen);
+        } else if self.kings & (1 << (from as u64)) != 0 {
+          piece_type = Some(PieceType::King);
+        }
+      }
+
+      // Determine if the move is a capture (are we moving to a dark piece?)
+      if self.light_pieces & (1 << to as u64) != 0 || self.dark_pieces & (1 << (to as u64)) != 0 {
+        capture = true;
+      }
+
+      // Determine if the move is a promotion
+      if (piece_type == Some(PieceType::Pawn)) && (((to as u8) < 8) || ((to as u8) > 55)) {
+        promotion = Some(PieceType::Queen);
+      }
+      // Create the move
+      Some(Move {
+        from: from,
+        to: to,
+        piece_type: piece_type.unwrap(),
+        capture: capture,
+        promotion: promotion,
+        en_passant: false,
+      })
+    }
+
     pub fn default()-> Board {
-    // This is using the Little-Endian Rank-File Mapping
-    // This was useful while writing these: https://tearth.dev/bitboard-viewer/
-    Board {
-      light_pieces:           0x000000000000FFFF,
-      dark_pieces:            0xFFFF000000000000,
-      pawns:                  0x00FF00000000FF00,
-      bishops:                0x2400000000000024,
-      knights:                0x4200000000000042,
-      rooks:                  0x8100000000000081,
-      queens:                 0x0800000000000008,
-      kings:                  0x1000000000000010,
-      a_file:                 0x0101010101010101,
-      h_file:                 0x8080808080808080,
-      first_rank:             0x00000000000000FF,
-      eighth_rank:            0xFF00000000000000,
-      a1_h8_diagonal:         0x8040201008040201,
-      h1_a8_anti_diagonal:    0x0102040810204080,
-    }
-  }
-
-  fn make_move(&self, m: &Move) {
-    unimplemented!();
-  }
-
-  fn is_king_attacked(&self) -> bool{
-    unimplemented!();
-  }
-
-  pub fn create_move(&self, from: Square, to: Square) -> Option<Move> {
-    let mut piece_type = None;
-    let mut capture = false;
-    let mut promotion = None;
-
-    // Determine the piece type of the moving piece
-    if self.light_pieces & (1 << (from as u64)) != 0 {
-      if self.pawns & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Pawn);
-      } else if self.knights & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Knight);
-      } else if self.bishops & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Bishop);
-      } else if self.rooks & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Rook);
-      } else if self.queens & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Queen);
-      } else if self.kings & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::King);
-      }
-    } else if self.dark_pieces & (1 << (from as u64)) != 0 {
-      if self.pawns & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Pawn);
-      } else if self.knights & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Knight);
-      } else if self.bishops & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Bishop);
-      } else if self.rooks & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Rook);
-      } else if self.queens & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::Queen);
-      } else if self.kings & (1 << (from as u64)) != 0 {
-        piece_type = Some(PieceType::King);
+      // This is using the Little-Endian Rank-File Mapping
+      // This was useful while writing these: https://tearth.dev/bitboard-viewer/
+      Board {
+        light_pieces:           0x000000000000FFFF,
+        dark_pieces:            0xFFFF000000000000,
+        pawns:                  0x00FF00000000FF00,
+        bishops:                0x2400000000000024,
+        knights:                0x4200000000000042,
+        rooks:                  0x8100000000000081,
+        queens:                 0x0800000000000008,
+        kings:                  0x1000000000000010,
+        a_file:                 0x0101010101010101,
+        h_file:                 0x8080808080808080,
+        first_rank:             0x00000000000000FF,
+        eighth_rank:            0xFF00000000000000,
+        a1_h8_diagonal:         0x8040201008040201,
+        h1_a8_anti_diagonal:    0x0102040810204080,
       }
     }
 
-    // Determine if the move is a capture (are we moving to a dark piece?)
-    if self.light_pieces & (1 << to as u64) != 0 || self.dark_pieces & (1 << (to as u64)) != 0 {
-      capture = true;
+    fn is_king_attacked(&self) -> bool{
+      unimplemented!();
     }
 
-    // Determine if the move is a promotion
-    if (piece_type == Some(PieceType::Pawn)) && (((to as u8) < 8) || ((to as u8) > 55)) {
-      promotion = Some(PieceType::Queen);
-    }
-    // Create the move
-    Some(Move {
-      from: from,
-      to: to,
-      piece_type: piece_type.unwrap(),
-      capture: capture,
-      promotion: promotion,
-      en_passant: false,
-    }) 
-  }
-
-  fn is_move_valid(&self, m: &Move) -> bool {
+    fn is_move_valid(&self, m: &Move) -> bool {
     let from_bb = 1u64 << (m.from as u64);
     let to_bb = 1u64 << (m.to as u64);
 
@@ -161,6 +159,10 @@ impl Board {
 
     true
 }
+
+  fn make_move(&self, m: &Move) {
+      unimplemented!();
+    }
 
 }
 
